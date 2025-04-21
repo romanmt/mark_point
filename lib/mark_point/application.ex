@@ -7,6 +7,13 @@ defmodule MarkPoint.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize DETS for notes storage
+    case MarkPoint.Notes.init() do
+      {:ok, _} -> :ok
+      {:error, reason} ->
+        IO.warn("Failed to initialize notes storage: #{reason}")
+    end
+
     children = [
       MarkPointWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:mark_point, :dns_cluster_query) || :ignore},
@@ -30,6 +37,13 @@ defmodule MarkPoint.Application do
   @impl true
   def config_change(changed, _new, removed) do
     MarkPointWeb.Endpoint.config_change(changed, removed)
+    :ok
+  end
+
+  @impl true
+  def stop(_state) do
+    # Ensure DETS is properly closed on application shutdown
+    MarkPoint.Notes.close()
     :ok
   end
 end

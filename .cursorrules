@@ -1,0 +1,37 @@
+# Markdown Note-Taking Application Rules
+
+## Architecture Principles
+- Keep the codebase simple and maintainable
+- Separate concerns: UI, data storage, business logic
+- Follow functional programming principles
+- Use proper error handling
+
+## Technical Constraints
+- Built with Elixir programming language and Phoenix web framework
+- Use Phoenix LiveView for interactive UI
+- DETS for persistent storage
+- Store notes as Erlang terms in DETS tables
+- Implement proper data backup/recovery functionality
+- Handle concurrent access to notes properly
+
+## Implementation Guidelines
+- Follow consistent naming conventions
+- Document code and functionality
+- Implement comprehensive error handling
+- Focus on data integrity and prevent loss
+
+## UI Requirements
+- Clean, minimalist interface
+- Responsive design
+- Clear visual feedback for user actions
+- Support for markdown editing/previewing 
+
+## Testing Guidelines
+- Write comprehensive unit tests for all modules
+- Test DETS operations thoroughly for data integrity
+- Achieve minimum 80% code coverage
+- Mock external dependencies appropriately
+- Include tests for edge cases and error conditions
+- Write tests for data migration/versioning scenarios
+- Implement integration tests for critical user workflows
+- Test concurrent data access scenarios 
