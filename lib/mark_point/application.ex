@@ -4,14 +4,25 @@ defmodule MarkPoint.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
   @impl true
   def start(_type, _args) do
     # Initialize DETS for notes storage
     case MarkPoint.Notes.init() do
-      {:ok, _} -> :ok
+      {:ok, _} ->
+        :ok
       {:error, reason} ->
-        IO.warn("Failed to initialize notes storage: #{reason}")
+        Logger.error("Failed to initialize notes storage: #{reason}")
+        Logger.info("Attempting to repair the DETS file...")
+
+        # Try to repair the file
+        case MarkPoint.Notes.repair() do
+          {:ok, _} ->
+            Logger.info("DETS file repair successful")
+          {:error, repair_reason} ->
+            Logger.error("Failed to repair DETS file: #{inspect(repair_reason)}")
+        end
     end
 
     children = [
@@ -20,8 +31,8 @@ defmodule MarkPoint.Application do
       {Phoenix.PubSub, name: MarkPoint.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: MarkPoint.Finch},
-      # Start a worker by calling: MarkPoint.Worker.start_link(arg)
-      # {MarkPoint.Worker, arg},
+      # Start the backup scheduler
+      MarkPoint.BackupScheduler,
       # Start to serve requests, typically the last entry
       MarkPointWeb.Endpoint
     ]

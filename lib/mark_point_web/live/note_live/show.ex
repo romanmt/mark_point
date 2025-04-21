@@ -39,7 +39,7 @@ defmodule MarkPointWeb.NoteLive.Show do
           <div>Updated: <%= Calendar.strftime(@note.updated_at, "%Y-%m-%d %H:%M") %></div>
         </div>
 
-        <div class="prose max-w-none">
+        <div class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto">
           <%= raw Earmark.as_html!(@note.content) %>
         </div>
       </div>

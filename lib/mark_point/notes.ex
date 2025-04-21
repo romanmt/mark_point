@@ -17,7 +17,15 @@ defmodule MarkPoint.Notes do
       {:ok, @table_name} ->
         {:ok, @table_name}
       {:error, reason} ->
-        {:error, "Failed to open DETS table: #{inspect(reason)}"}
+        # Try to repair the file if it's corrupted
+        case reason do
+          {:premature_eof, _} ->
+            # Try to delete and recreate the file
+            File.rm(@dets_file_path)
+            init()
+          _ ->
+            {:error, "Failed to open DETS table: #{inspect(reason)}"}
+        end
     end
   end
 
@@ -36,8 +44,12 @@ defmodule MarkPoint.Notes do
     }
 
     case :dets.insert(@table_name, {note_id, note}) do
-      :ok -> {:ok, note_id}
-      {:error, reason} -> {:error, "Failed to create note: #{inspect(reason)}"}
+      :ok ->
+        # Sync to disk to prevent corruption
+        :dets.sync(@table_name)
+        {:ok, note_id}
+      {:error, reason} ->
+        {:error, "Failed to create note: #{inspect(reason)}"}
     end
   end
 
@@ -58,16 +70,22 @@ defmodule MarkPoint.Notes do
   Returns a list of notes.
   """
   def list_notes do
-    :dets.match_object(@table_name, {:_, :_})
-    |> Enum.map(fn {_, note} -> note end)
-    |> Enum.sort(fn a, b ->
-      DateTime.compare(a.updated_at, b.updated_at) == :gt
-    end)
+    case :dets.match_object(@table_name, {:_, :_}) do
+      {:error, reason} ->
+        # Handle error case, return empty list and log the error
+        require Logger
+        Logger.error("Failed to list notes: #{inspect(reason)}")
+        []
+      notes when is_list(notes) ->
+        notes
+        |> Enum.map(fn {_, note} -> note end)
+        |> Enum.sort(fn a, b ->
+          DateTime.compare(a.updated_at, b.updated_at) == :gt
+        end)
+    end
   end
 
-  @doc """
-  Generates a unique ID for a note.
-  """
+  # Generates a unique ID for a note.
   defp generate_id do
     System.unique_integer([:positive, :monotonic])
   end
@@ -76,6 +94,30 @@ defmodule MarkPoint.Notes do
   Ensures the DETS table is properly closed on application shutdown.
   """
   def close do
+    # Always sync before closing to prevent corruption
+    :dets.sync(@table_name)
     :dets.close(@table_name)
+  end
+
+  @doc """
+  Repairs the DETS file if it's corrupted.
+  """
+  def repair do
+    # Try to close the table first
+    _ = :dets.close(@table_name)
+
+    # Since :dets.repair_file/2 isn't available, we'll use a simpler approach
+    # by deleting and recreating the file if it exists
+    if File.exists?(@dets_file_path) do
+      # Create a backup before deleting, just in case
+      backup_path = "#{@dets_file_path}_backup_#{System.system_time(:second)}"
+      _ = File.cp(@dets_file_path, backup_path)
+
+      # Delete and recreate
+      File.rm(@dets_file_path)
+    end
+
+    # Initialize a new DETS file
+    init()
   end
 end

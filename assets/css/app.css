@@ -3,3 +3,39 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+html {
+  @apply antialiased text-gray-900;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom styling for note content */
+.prose pre {
+  @apply bg-gray-100 rounded-md p-4 overflow-auto;
+}
+
+.prose code {
+  @apply text-pink-600 font-medium;
+}
+
+.prose a {
+  @apply text-blue-600 font-semibold;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-700;
+}
+
+/* Style headings with Inter font weight variations */
+.prose h1 {
+  @apply font-semibold;
+}
+
+.prose h2 {
+  @apply font-medium;
+}
+
+.prose h3 {
+  @apply font-medium text-gray-700;
+}

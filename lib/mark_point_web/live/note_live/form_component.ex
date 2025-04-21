@@ -46,7 +46,7 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
   end
 
   @impl true
-  def update(%{note: note} = assigns, socket) do
+  def update(%{note: _note} = assigns, socket) do
     changeset = %{title: "", content: ""}
 
     {:ok,
