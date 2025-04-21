@@ -7,10 +7,14 @@ defmodule MarkPoint.StorageManager do
   require Logger
   alias MarkPoint.Notes
 
-  @dets_file_path "priv/notes"
+  # Get the DETS file path from configuration based on environment
+  defp dets_file_path do
+    Application.get_env(:mark_point, :dets)[:file_path]
+  end
 
   @doc """
   Repairs the DETS file and attempts to recover data.
+  This will create a backup of the current file before attempting repair.
   Returns :ok on success, {:error, reason} on failure.
 
   Example:
@@ -18,6 +22,14 @@ defmodule MarkPoint.StorageManager do
   """
   def repair_storage do
     Logger.info("Starting DETS file repair...")
+
+    # Create a manual backup first
+    backup_name = "manual_repair_#{System.system_time(:second)}"
+    _ = create_named_backup(backup_name)
+
+    Logger.info("Created backup before repair at #{dets_file_path()}_backup_#{backup_name}")
+
+    # Now attempt repair
     result = Notes.repair()
     Logger.info("DETS file repair completed with result: #{inspect(result)}")
     result
@@ -32,7 +44,14 @@ defmodule MarkPoint.StorageManager do
   """
   def backup do
     timestamp = DateTime.utc_now() |> DateTime.to_iso8601() |> String.replace(~r/[^\w]/, "_")
-    backup_path = "#{@dets_file_path}_backup_#{timestamp}"
+    create_named_backup(timestamp)
+  end
+
+  @doc """
+  Creates a backup with a specific name.
+  """
+  def create_named_backup(name) do
+    backup_path = "#{dets_file_path()}_backup_#{name}"
 
     Logger.info("Creating backup at #{backup_path}...")
 
@@ -40,7 +59,7 @@ defmodule MarkPoint.StorageManager do
     Notes.close()
 
     # Copy the file
-    result = case File.cp(@dets_file_path, backup_path) do
+    result = case File.cp(dets_file_path(), backup_path) do
       :ok ->
         # Reopen DETS
         Notes.init()
@@ -71,7 +90,7 @@ defmodule MarkPoint.StorageManager do
     Notes.close()
 
     # Copy the backup file over the current file
-    result = case File.cp(backup_path, @dets_file_path) do
+    result = case File.cp(backup_path, dets_file_path()) do
       :ok ->
         Notes.init()
         Logger.info("Restore completed successfully")
@@ -93,6 +112,35 @@ defmodule MarkPoint.StorageManager do
       MarkPoint.StorageManager.list_backups()
   """
   def list_backups do
-    Path.wildcard("#{@dets_file_path}_backup_*")
+    Path.wildcard("#{dets_file_path()}_backup_*")
+  end
+
+  @doc """
+  Deletes backups older than the specified number of days.
+  Returns the number of backups deleted.
+
+  Example:
+      MarkPoint.StorageManager.cleanup_old_backups(7) # Deletes backups older than 7 days
+  """
+  def cleanup_old_backups(days) do
+    now = DateTime.utc_now()
+    seconds_threshold = days * 24 * 60 * 60
+
+    list_backups()
+    |> Enum.filter(fn path ->
+      case File.stat(path) do
+        {:ok, %{mtime: mtime}} ->
+          mtime_datetime = NaiveDateTime.from_erl!(mtime) |> DateTime.from_naive!("Etc/UTC")
+          diff_seconds = DateTime.diff(now, mtime_datetime)
+          diff_seconds > seconds_threshold
+        _ ->
+          false
+      end
+    end)
+    |> Enum.map(fn path ->
+      Logger.info("Deleting old backup: #{path}")
+      File.rm(path)
+    end)
+    |> Enum.count()
   end
 end

@@ -5,15 +5,19 @@ defmodule MarkPoint.Notes do
   """
 
   @table_name :notes
-  @dets_file_path "priv/notes"
+
+  # Get the DETS file path from configuration based on environment
+  defp dets_file_path do
+    Application.get_env(:mark_point, :dets)[:file_path]
+  end
 
   @doc """
   Initializes the DETS table for notes.
   """
   def init do
-    File.mkdir_p!(Path.dirname(@dets_file_path))
+    File.mkdir_p!(Path.dirname(dets_file_path()))
 
-    case :dets.open_file(@table_name, [type: :set, file: String.to_charlist(@dets_file_path)]) do
+    case :dets.open_file(@table_name, [type: :set, file: String.to_charlist(dets_file_path())]) do
       {:ok, @table_name} ->
         {:ok, @table_name}
       {:error, reason} ->
@@ -21,7 +25,7 @@ defmodule MarkPoint.Notes do
         case reason do
           {:premature_eof, _} ->
             # Try to delete and recreate the file
-            File.rm(@dets_file_path)
+            File.rm(dets_file_path())
             init()
           _ ->
             {:error, "Failed to open DETS table: #{inspect(reason)}"}
@@ -108,13 +112,13 @@ defmodule MarkPoint.Notes do
 
     # Since :dets.repair_file/2 isn't available, we'll use a simpler approach
     # by deleting and recreating the file if it exists
-    if File.exists?(@dets_file_path) do
+    if File.exists?(dets_file_path()) do
       # Create a backup before deleting, just in case
-      backup_path = "#{@dets_file_path}_backup_#{System.system_time(:second)}"
-      _ = File.cp(@dets_file_path, backup_path)
+      backup_path = "#{dets_file_path()}_backup_#{System.system_time(:second)}"
+      _ = File.cp(dets_file_path(), backup_path)
 
       # Delete and recreate
-      File.rm(@dets_file_path)
+      File.rm(dets_file_path())
     end
 
     # Initialize a new DETS file

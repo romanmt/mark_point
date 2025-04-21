@@ -4,14 +4,16 @@ defmodule MarkPointWeb.NoteLive.ShowTest do
   import Phoenix.LiveViewTest
   alias MarkPoint.Notes
 
-  setup do
-    # Set up a test DETS table and create a test note
-    test_file = "priv/test_notes"
-    File.rm(test_file)
-    File.mkdir_p!(Path.dirname(test_file))
+  # Get the test-specific DETS file path
+  @test_file Application.compile_env(:mark_point, :dets)[:file_path]
 
-    # Open the test DETS table
-    :dets.open_file(:notes, [type: :set, file: String.to_charlist(test_file)])
+  setup do
+    # Make sure the DETS file doesn't exist at the start of each test
+    File.rm(@test_file)
+    File.mkdir_p!(Path.dirname(@test_file))
+
+    # Initialize the test DETS table
+    Notes.init()
 
     # Create a test note with markdown content
     markdown_content = """
@@ -39,8 +41,8 @@ defmodule MarkPointWeb.NoteLive.ShowTest do
 
     on_exit(fn ->
       # Close and delete the test DETS table
-      :dets.close(:notes)
-      File.rm(test_file)
+      Notes.close()
+      File.rm(@test_file)
     end)
 
     %{note_id: note_id}

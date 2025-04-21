@@ -7,8 +7,9 @@
 # General application configuration
 import Config
 
-config :mark_point,
-  generators: [timestamp_type: :utc_datetime]
+# DETS storage configuration
+config :mark_point, :dets,
+  file_path: "priv/notes"
 
 # Configures the endpoint
 config :mark_point, MarkPointWeb.Endpoint,

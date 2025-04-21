@@ -4,14 +4,16 @@ defmodule MarkPointWeb.NoteLive.IndexTest do
   import Phoenix.LiveViewTest
   alias MarkPoint.Notes
 
-  setup do
-    # Set up a test DETS table and create some test notes
-    test_file = "priv/test_notes"
-    File.rm(test_file)
-    File.mkdir_p!(Path.dirname(test_file))
+  # Get the test-specific DETS file path
+  @test_file Application.compile_env(:mark_point, :dets)[:file_path]
 
-    # Open the test DETS table
-    :dets.open_file(:notes, [type: :set, file: String.to_charlist(test_file)])
+  setup do
+    # Make sure the DETS file doesn't exist at the start of each test
+    File.rm(@test_file)
+    File.mkdir_p!(Path.dirname(@test_file))
+
+    # Initialize the test DETS table
+    Notes.init()
 
     # Create test notes
     {:ok, note1_id} = Notes.create_note("Test Note 1", "Content for test note 1")
@@ -19,8 +21,8 @@ defmodule MarkPointWeb.NoteLive.IndexTest do
 
     on_exit(fn ->
       # Close and delete the test DETS table
-      :dets.close(:notes)
-      File.rm(test_file)
+      Notes.close()
+      File.rm(@test_file)
     end)
 
     %{note1_id: note1_id, note2_id: note2_id}

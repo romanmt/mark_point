@@ -1,10 +1,14 @@
 import Config
 
+# DETS storage configuration for test environment
+config :mark_point, :dets,
+  file_path: "priv/test_notes"
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :mark_point, MarkPointWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "5ecTXl6kj+s6Yvlfsrx5iJFJn2jB7lyJ59ibGSL83060wtkTgkTgIM70LILGnqZd",
+  secret_key_base: "NqLT/P76+KXPZkJ8tGJMmVLBzjT0hBtHQpEwCeaXzBQLmHQKo9LUiPaGE1RsM5Jq",
   server: false
 
 # In test we don't send emails
