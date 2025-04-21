@@ -76,4 +76,25 @@ defmodule MarkPointWeb.NoteLive.IndexTest do
     {:ok, _view, html} = live(conn, ~p"/notes")
     assert html =~ "New Test Note"
   end
+
+  test "deletes a note", %{conn: conn, note1_id: note1_id} do
+    # First, verify that the note exists
+    assert {:ok, _} = Notes.get_note(note1_id)
+
+    {:ok, view, _html} = live(conn, ~p"/notes")
+
+    # Click the trash icon to show the confirmation dialog
+    assert view
+           |> element("button[phx-click='show_delete_confirmation'][phx-value-id='#{note1_id}']")
+           |> render_click()
+
+    # Click the Delete button in the confirmation dialog
+    assert view
+           |> element("#delete-confirmation button.bg-red-500", "Delete")
+           |> render_click()
+
+    # Verify note is gone from database with a brief wait for processing
+    Process.sleep(100)
+    assert {:error, :not_found} = Notes.get_note(note1_id)
+  end
 end

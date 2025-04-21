@@ -58,6 +58,34 @@ defmodule MarkPoint.Notes do
   end
 
   @doc """
+  Updates an existing note with the given title and content.
+  Returns {:ok, note} on success, {:error, reason} on failure.
+  """
+  def update_note(id, title, content) do
+    case get_note(id) do
+      {:ok, note} ->
+        updated_note = %{
+          note |
+          title: title,
+          content: content,
+          updated_at: DateTime.utc_now()
+        }
+
+        case :dets.insert(@table_name, {id, updated_note}) do
+          :ok ->
+            # Sync to disk to prevent corruption
+            :dets.sync(@table_name)
+            {:ok, updated_note}
+          {:error, reason} ->
+            {:error, "Failed to update note: #{inspect(reason)}"}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
   Gets a note by ID.
   Returns {:ok, note} on success, {:error, reason} on failure.
   """
@@ -66,6 +94,21 @@ defmodule MarkPoint.Notes do
       [{^id, note}] -> {:ok, note}
       [] -> {:error, :not_found}
       {:error, reason} -> {:error, "Failed to get note: #{inspect(reason)}"}
+    end
+  end
+
+  @doc """
+  Deletes a note by ID.
+  Returns :ok on success, {:error, reason} on failure.
+  """
+  def delete_note(id) do
+    case :dets.delete(@table_name, id) do
+      :ok ->
+        # Sync to disk to prevent corruption
+        :dets.sync(@table_name)
+        :ok
+      {:error, reason} ->
+        {:error, "Failed to delete note: #{inspect(reason)}"}
     end
   end
 

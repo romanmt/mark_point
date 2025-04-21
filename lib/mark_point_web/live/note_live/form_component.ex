@@ -34,6 +34,9 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
               rows="10"
             />
           </div>
+          <%= if @note && Map.has_key?(@note, :id) do %>
+            <input type="hidden" name="note_id" value={@note[:id]} />
+          <% end %>
           <div class="flex justify-end">
             <.button type="submit" phx-disable-with="Saving...">
               Save Note
@@ -46,8 +49,18 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
   end
 
   @impl true
-  def update(%{note: _note} = assigns, socket) do
-    changeset = %{title: "", content: ""}
+  def update(%{note: note} = assigns, socket) do
+    changeset = if note && Map.has_key?(note, :id) do
+      # Editing existing note
+      %{
+        id: note.id,
+        title: note.title,
+        content: note.content
+      }
+    else
+      # Creating new note
+      %{title: "", content: ""}
+    end
 
     {:ok,
      socket
@@ -56,7 +69,27 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
   end
 
   @impl true
+  def handle_event("save", %{"note_id" => id, "title" => title, "content" => content}, socket) do
+    # Update existing note
+    id = String.to_integer(id)
+    case Notes.update_note(id, title, content) do
+      {:ok, _updated_note} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Note updated successfully")
+         |> push_navigate(to: socket.assigns.navigate)}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error updating note: #{reason}")
+         |> assign_form(%{id: id, title: title, content: content})}
+    end
+  end
+
+  @impl true
   def handle_event("save", %{"title" => title, "content" => content}, socket) do
+    # Create new note
     case Notes.create_note(title, content) do
       {:ok, _note_id} ->
         {:noreply,
@@ -74,6 +107,7 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
 
   defp assign_form(socket, attrs) do
     form = to_form(%{
+      "id" => Map.get(attrs, :id, nil),
       "title" => Map.get(attrs, :title, ""),
       "content" => Map.get(attrs, :content, "")
     })

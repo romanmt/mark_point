@@ -21,7 +21,15 @@ defmodule MarkPointWeb.Router do
 
     live "/notes", NoteLive.Index, :index
     live "/notes/new", NoteLive.Index, :new
+
+    # Edit from index view
+    live "/notes/:id/edit", NoteLive.Index, :edit
+
+    # Note show page
     live "/notes/:id", NoteLive.Show, :show
+
+    # Edit from show view
+    live "/notes/:id/edit/from_show", NoteLive.Show, :edit
   end
 
   # Other scopes may use custom stacks.

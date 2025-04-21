@@ -42,6 +42,22 @@ defmodule MarkPoint.NotesTest do
     assert note.content == content
   end
 
+  test "delete_note/1 deletes a note by id" do
+    title = "Test Note for Delete"
+    content = "Test content for delete"
+
+    {:ok, note_id} = Notes.create_note(title, content)
+
+    # Verify the note exists
+    assert {:ok, _note} = Notes.get_note(note_id)
+
+    # Delete the note
+    assert :ok = Notes.delete_note(note_id)
+
+    # Verify the note no longer exists
+    assert {:error, :not_found} = Notes.get_note(note_id)
+  end
+
   test "list_notes/0 returns all notes" do
     # Create a few test notes
     Notes.create_note("Note 1", "Content 1")

@@ -89,4 +89,28 @@ defmodule MarkPointWeb.NoteLive.ShowTest do
     # Check that we're redirected to the index page
     assert_redirect(view, ~p"/notes")
   end
+
+  test "deletes a note", %{conn: conn, note_id: note_id} do
+    # First, verify that the note exists
+    assert {:ok, _} = Notes.get_note(note_id)
+
+    {:ok, view, _html} = live(conn, ~p"/notes/#{note_id}")
+
+    # Click the trash icon to show the confirmation dialog
+    assert view
+           |> element("button[phx-click='show_delete_confirmation']")
+           |> render_click()
+
+    # Click the Delete button in the confirmation dialog using a more specific selector
+    assert view
+           |> element("#delete-confirmation button.bg-red-500", "Delete")
+           |> render_click()
+
+    # Check that we're redirected to the notes list
+    assert_redirect(view, ~p"/notes")
+
+    # Verify note is gone from database with a brief wait for processing
+    Process.sleep(100)
+    assert {:error, :not_found} = Notes.get_note(note_id)
+  end
 end
