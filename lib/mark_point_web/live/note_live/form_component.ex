@@ -6,13 +6,14 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <h2 class="text-lg font-semibold mb-4"><%= @title %></h2>
+    <div class="bg-white p-6 rounded-lg">
+      <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b"><%= @title %></h2>
       <.form
         for={@form}
         id="note-form"
         phx-target={@myself}
         phx-submit="save"
+        class="space-y-6"
       >
         <div class="space-y-4">
           <div>
@@ -22,6 +23,7 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
               label="Title"
               required
               placeholder="Enter note title"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             />
           </div>
           <div>
@@ -31,14 +33,18 @@ defmodule MarkPointWeb.NoteLive.FormComponent do
               label="Content (Markdown)"
               required
               placeholder="Enter note content using Markdown"
-              rows="10"
+              rows="12"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 font-mono"
             />
+            <p class="mt-1 text-sm text-gray-500">
+              Supports Markdown formatting: **bold**, _italic_, `code`, [links](url), and more.
+            </p>
           </div>
           <%= if @note && Map.has_key?(@note, :id) do %>
             <input type="hidden" name="note_id" value={@note[:id]} />
           <% end %>
-          <div class="flex justify-end">
-            <.button type="submit" phx-disable-with="Saving...">
+          <div class="flex justify-end pt-4">
+            <.button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition-colors duration-200" phx-disable-with="Saving...">
               Save Note
             </.button>
           </div>

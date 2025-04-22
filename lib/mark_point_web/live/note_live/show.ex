@@ -70,16 +70,19 @@ defmodule MarkPointWeb.NoteLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-3xl">
-      <div class="mb-4 flex justify-between items-center">
-        <.link navigate={~p"/notes"} class="text-blue-500 hover:text-blue-700">
-          &larr; Back to Notes
+    <div class="mx-auto max-w-4xl px-4 py-8">
+      <div class="mb-6 flex justify-between items-center">
+        <.link navigate={~p"/notes"} class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Notes
         </.link>
 
-        <div class="flex space-x-2">
+        <div class="flex space-x-3">
           <.link
-            patch={~p"/notes/#{@note.id}/edit/from_show"}
-            class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded flex items-center gap-1"
+            patch={~p"/notes/#{@note[:id] || 0}/edit/from_show"}
+            class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition-colors duration-200 flex items-center gap-1 shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -89,7 +92,7 @@ defmodule MarkPointWeb.NoteLive.Show do
 
           <button
             phx-click="show_delete_confirmation"
-            class="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded flex items-center gap-1"
+            class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors duration-200 flex items-center gap-1 shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -100,14 +103,14 @@ defmodule MarkPointWeb.NoteLive.Show do
       </div>
 
       <%= if @live_action == :edit do %>
-        <.modal id="note-modal" show on_cancel={JS.patch(~p"/notes/#{@note.id}")}>
+        <.modal id="note-modal" show on_cancel={JS.patch(~p"/notes/#{@note[:id] || 0}")}>
           <.live_component
             module={FormComponent}
-            id={@note.id}
+            id={@note[:id] || "new-note"}
             title="Edit Note"
             action={@live_action}
-            note={@note}
-            navigate={~p"/notes/#{@note.id}"}
+            note={@note || %{}}
+            navigate={~p"/notes/#{@note[:id] || 0}"}
           />
         </.modal>
       <% end %>
@@ -124,16 +127,30 @@ defmodule MarkPointWeb.NoteLive.Show do
         <:cancel_button>Cancel</:cancel_button>
       </ConfirmationComponent.confirmation>
 
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold mb-2"><%= @note.title %></h1>
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6 border-b">
+          <h1 class="text-2xl font-bold text-gray-900 mb-3"><%= @note[:title] || "Untitled" %></h1>
 
-        <div class="text-sm text-gray-500 mb-6">
-          <div>Created: <%= Calendar.strftime(@note.created_at, "%Y-%m-%d %H:%M") %></div>
-          <div>Updated: <%= Calendar.strftime(@note.updated_at, "%Y-%m-%d %H:%M") %></div>
+          <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Created: <%= if Map.has_key?(@note, :created_at), do: Calendar.strftime(@note.created_at, "%Y-%m-%d %H:%M"), else: "-" %>
+            </div>
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Updated: <%= if Map.has_key?(@note, :updated_at), do: Calendar.strftime(@note.updated_at, "%Y-%m-%d %H:%M"), else: "-" %>
+            </div>
+          </div>
         </div>
 
-        <div class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto">
-          <%= raw Earmark.as_html!(@note.content) %>
+        <div class="p-6 bg-gray-50">
+          <div class="prose prose-indigo max-w-none">
+            <%= raw Earmark.as_html!(@note[:content] || "") %>
+          </div>
         </div>
       </div>
     </div>

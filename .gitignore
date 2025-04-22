@@ -35,3 +35,8 @@ mark_point-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Ignore DETS notes backup files
+priv/notes_backup_*
+
+# Ignore notes
+priv/notes

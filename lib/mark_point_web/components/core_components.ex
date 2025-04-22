@@ -50,7 +50,7 @@ defmodule MarkPointWeb.CoreComponents do
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
-      <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
+      <div id={"#{@id}-bg"} class="fixed inset-0 bg-gray-900/80 transition-opacity" aria-hidden="true" />
       <div
         class="fixed inset-0 overflow-y-auto"
         aria-labelledby={"#{@id}-title"}
@@ -59,20 +59,20 @@ defmodule MarkPointWeb.CoreComponents do
         aria-modal="true"
         tabindex="0"
       >
-        <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+        <div class="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div class="w-full max-w-3xl">
             <.focus_wrap
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
+              class="relative hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-200 transition-all"
             >
-              <div class="absolute top-6 right-5">
+              <div class="absolute top-4 right-4">
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="text-gray-400 hover:text-gray-600 rounded-md p-2 transition-colors"
                   aria-label={gettext("close")}
                 >
                   <.icon name="hero-x-mark-solid" class="h-5 w-5" />
@@ -115,21 +115,27 @@ defmodule MarkPointWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
+        "fixed top-4 right-4 max-w-sm z-50 rounded-lg p-4 shadow-lg ring-1 transform transition-all duration-500",
+        @kind == :info && "bg-indigo-50 text-indigo-800 ring-indigo-500",
+        @kind == :error && "bg-rose-50 text-rose-900 ring-rose-500"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0">
+          <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-5 w-5 text-indigo-600" />
+          <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-5 w-5 text-rose-600" />
+        </div>
+        <div class="flex-1">
+          <p :if={@title} class="text-sm font-medium">
+            {@title}
+          </p>
+          <p class="text-sm mt-1 text-indigo-700">{msg}</p>
+        </div>
+        <button type="button" class="flex-shrink-0 p-1.5 rounded-md hover:bg-indigo-100" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark-solid" class="h-4 w-4 opacity-60" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -231,8 +237,9 @@ defmodule MarkPointWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "phx-submit-loading:opacity-75 rounded-md bg-indigo-600 hover:bg-indigo-700 py-2 px-4",
+        "text-sm font-medium text-white shadow-sm transition-colors duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
         @class
       ]}
       {@rest}
