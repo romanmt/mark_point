@@ -39,10 +39,15 @@ defmodule MarkPoint.Notes do
   """
   def create_note(title, content) do
     note_id = generate_id()
+
+    # Get the highest order value and add 1, or start at 0 if no notes exist
+    highest_order = get_highest_order() || 0
+
     note = %{
       id: note_id,
       title: title,
       content: content,
+      order: highest_order + 1,
       created_at: DateTime.utc_now(),
       updated_at: DateTime.utc_now()
     }
@@ -54,6 +59,18 @@ defmodule MarkPoint.Notes do
         {:ok, note_id}
       {:error, reason} ->
         {:error, "Failed to create note: #{inspect(reason)}"}
+    end
+  end
+
+  # Helper function to get the highest order value from existing notes
+  defp get_highest_order do
+    case :dets.match_object(@table_name, {:_, :_}) do
+      {:error, _reason} -> nil
+      notes when is_list(notes) and notes == [] -> nil
+      notes when is_list(notes) ->
+        notes
+        |> Enum.map(fn {_, note} -> Map.get(note, :order, 0) end)
+        |> Enum.max(fn -> 0 end)
     end
   end
 
@@ -114,7 +131,7 @@ defmodule MarkPoint.Notes do
 
   @doc """
   Lists all notes.
-  Returns a list of notes.
+  Returns a list of notes sorted by order.
   """
   def list_notes do
     case :dets.match_object(@table_name, {:_, :_}) do
@@ -126,9 +143,7 @@ defmodule MarkPoint.Notes do
       notes when is_list(notes) ->
         notes
         |> Enum.map(fn {_, note} -> note end)
-        |> Enum.sort(fn a, b ->
-          DateTime.compare(a.updated_at, b.updated_at) == :gt
-        end)
+        |> Enum.sort_by(fn note -> Map.get(note, :order, 0) end, :asc)
     end
   end
 
@@ -166,5 +181,28 @@ defmodule MarkPoint.Notes do
 
     # Initialize a new DETS file
     init()
+  end
+
+  @doc """
+  Updates the order of a note.
+  Returns {:ok, updated_note} on success, {:error, reason} on failure.
+  """
+  def update_note_order(id, new_order) when is_integer(new_order) do
+    case get_note(id) do
+      {:ok, note} ->
+        updated_note = Map.put(note, :order, new_order)
+
+        case :dets.insert(@table_name, {id, updated_note}) do
+          :ok ->
+            # Sync to disk to prevent corruption
+            :dets.sync(@table_name)
+            {:ok, updated_note}
+          {:error, reason} ->
+            {:error, "Failed to update note order: #{inspect(reason)}"}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end

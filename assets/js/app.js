@@ -21,11 +21,42 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import Sortable from "sortablejs"
+
+// Define hooks for LiveView
+let Hooks = {}
+
+// Add sortable hooks for drag-and-drop functionality
+Hooks.Sortable = {
+  mounted() {
+    const container = this.el
+    
+    // Initialize Sortable on the notes container
+    const sortable = new Sortable(container, {
+      animation: 150,
+      ghostClass: "bg-gray-100",
+      handle: ".drag-handle",
+      onEnd: (evt) => {
+        // Get the note ID and its new position
+        const noteId = evt.item.dataset.noteId
+        const newOrder = evt.newIndex + 1
+        
+        // Push the event to the server to update the order
+        // Ensure both values are sent as strings to avoid type confusion
+        this.pushEvent("update_note_order", { 
+          id: String(noteId), 
+          order: String(newOrder) 
+        })
+      }
+    })
+  }
+}
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken}
+  params: {_csrf_token: csrfToken},
+  hooks: Hooks
 })
 
 // Show progress bar on live navigation and form submits

@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Architecture Guidelines
+
+## Core Principles
+- Maintain simplicity and code maintainability
+- Follow strict separation of concerns:
+  - UI Layer (Phoenix LiveView)
+  - Data Storage Layer (DETS)
+  - Business Logic Layer
+- Adhere to functional programming principles
+- Implement comprehensive error handling
+
+## Technical Stack
+- Elixir programming language with Phoenix framework
+- Phoenix LiveView for real-time, interactive UI components
+- DETS (Disk Erlang Term Storage) for persistent data storage
+- Notes stored as Erlang terms in DETS tables
+
+## Data Management
+- Implement robust backup and recovery mechanisms
+- Handle concurrent note access with proper synchronization
+- Ensure data integrity across all operations
+- Prevent data loss through proper error handling and validation

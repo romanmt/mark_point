@@ -1,0 +1,30 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Implementation Guidelines
+
+## Coding Standards
+- Use consistent naming conventions across the codebase
+- Document all modules, functions, and complex logic
+- Follow Elixir community best practices and style guides
+- Keep functions small and focused on single responsibilities
+
+## Error Handling
+- Implement proper error handling for all operations
+- Use appropriate error types and messages
+- Log errors with sufficient context for debugging
+- Handle edge cases explicitly
+
+## Data Operations
+- Validate all data before storage
+- Implement proper DETS table management
+- Handle data versioning and migrations
+- Ensure atomic operations where necessary
+
+## Code Organization
+- Group related functionality into cohesive modules
+- Use proper module hierarchy
+- Keep business logic separate from UI components
+- Implement clear interfaces between layers

@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Testing Guidelines
+
+## Coverage Requirements
+- Maintain minimum 80% code coverage
+- Write comprehensive unit tests for all modules
+- Implement integration tests for critical workflows
+- Test all DETS operations thoroughly
+
+## Test Categories
+- Unit Tests: Test individual functions and modules
+- Integration Tests: Test interactions between components
+- Concurrency Tests: Verify proper handling of concurrent access
+- Migration Tests: Validate data migration scenarios
+
+## Testing Best Practices
+- Mock external dependencies appropriately
+- Test edge cases and error conditions
+- Use proper test data fixtures
+- Follow arrange-act-assert pattern
+- Keep tests focused and maintainable
+
+## Data Integrity Testing
+- Verify data consistency after operations
+- Test backup and recovery procedures
+- Validate concurrent access handling
+- Test data migration scenarios thoroughly

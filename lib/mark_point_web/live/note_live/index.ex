@@ -52,6 +52,27 @@ defmodule MarkPointWeb.NoteLive.Index do
   end
 
   @impl true
+  def handle_event("update_note_order", %{"id" => id, "order" => order}, socket) do
+    # Convert id to integer if it's a string
+    id = if is_binary(id), do: String.to_integer(id), else: id
+
+    # Convert order to integer if it's a string
+    order = if is_binary(order), do: String.to_integer(order), else: order
+
+    case Notes.update_note_order(id, order) do
+      {:ok, _updated_note} ->
+        # Fetch the updated list of notes
+        notes = Notes.list_notes()
+        {:noreply, assign(socket, notes: notes)}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error updating note order: #{reason}")}
+    end
+  end
+
+  @impl true
   def handle_event("delete_note", _, socket) do
     id = String.to_integer(socket.assigns.note_to_delete)
 
@@ -114,11 +135,21 @@ defmodule MarkPointWeb.NoteLive.Index do
         <:cancel_button>Cancel</:cancel_button>
       </ConfirmationComponent.confirmation>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+           id="notes-grid"
+           phx-hook="Sortable">
         <%= for note <- @notes do %>
-          <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
+               data-note-id={note.id}>
             <div class="p-5 flex-grow">
-              <h2 class="text-xl font-semibold mb-3 text-gray-800 line-clamp-1"><%= note[:title] || "Untitled" %></h2>
+              <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-semibold text-gray-800 line-clamp-1"><%= note[:title] || "Untitled" %></h2>
+                <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                  </svg>
+                </div>
+              </div>
               <div class="text-sm text-gray-500 mb-4 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

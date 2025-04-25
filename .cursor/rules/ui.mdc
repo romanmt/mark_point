@@ -1,0 +1,30 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# UI Guidelines
+
+## Design Principles
+- Maintain a clean, minimalist interface
+- Ensure responsive design for all screen sizes
+- Provide clear visual feedback for user actions
+- Follow consistent design patterns
+
+## Markdown Support
+- Implement full markdown editing capabilities
+- Provide real-time markdown preview
+- Support common markdown extensions
+- Include syntax highlighting
+
+## User Experience
+- Minimize loading times and optimize performance
+- Implement intuitive navigation
+- Provide clear error messages and feedback
+- Support keyboard shortcuts for common actions
+
+## LiveView Implementation
+- Use LiveView for real-time updates
+- Implement proper event handling
+- Optimize LiveView performance
+- Handle disconnections gracefully
