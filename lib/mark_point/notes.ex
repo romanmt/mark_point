@@ -56,6 +56,8 @@ defmodule MarkPoint.Notes do
       :ok ->
         # Sync to disk to prevent corruption
         :dets.sync(@table_name)
+        # Broadcast note creation to all clients
+        Phoenix.PubSub.broadcast(MarkPoint.PubSub, "notes", {:note_created, note})
         {:ok, note_id}
       {:error, reason} ->
         {:error, "Failed to create note: #{inspect(reason)}"}
@@ -92,6 +94,8 @@ defmodule MarkPoint.Notes do
           :ok ->
             # Sync to disk to prevent corruption
             :dets.sync(@table_name)
+            # Broadcast note update to all clients
+            Phoenix.PubSub.broadcast(MarkPoint.PubSub, "notes", {:note_updated, updated_note})
             {:ok, updated_note}
           {:error, reason} ->
             {:error, "Failed to update note: #{inspect(reason)}"}
@@ -119,10 +123,20 @@ defmodule MarkPoint.Notes do
   Returns :ok on success, {:error, reason} on failure.
   """
   def delete_note(id) do
+    # Get the note before deleting it for the broadcast
+    note_to_delete = case get_note(id) do
+      {:ok, note} -> note
+      _ -> nil
+    end
+
     case :dets.delete(@table_name, id) do
       :ok ->
         # Sync to disk to prevent corruption
         :dets.sync(@table_name)
+        # Broadcast note deletion to all clients if we have the note
+        if note_to_delete do
+          Phoenix.PubSub.broadcast(MarkPoint.PubSub, "notes", {:note_deleted, note_to_delete})
+        end
         :ok
       {:error, reason} ->
         {:error, "Failed to delete note: #{inspect(reason)}"}
@@ -196,6 +210,8 @@ defmodule MarkPoint.Notes do
           :ok ->
             # Sync to disk to prevent corruption
             :dets.sync(@table_name)
+            # Broadcast note order update to all clients
+            Phoenix.PubSub.broadcast(MarkPoint.PubSub, "notes", {:note_order_updated, updated_note})
             {:ok, updated_note}
           {:error, reason} ->
             {:error, "Failed to update note order: #{inspect(reason)}"}

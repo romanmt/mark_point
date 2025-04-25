@@ -7,6 +7,11 @@ defmodule MarkPointWeb.NoteLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    # Subscribe to the notes topic for real-time updates
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(MarkPoint.PubSub, "notes")
+    end
+
     case Notes.get_note(String.to_integer(id)) do
       {:ok, note} ->
         {:ok, assign(socket, note: note, show_delete_confirmation: false)}
@@ -36,6 +41,36 @@ defmodule MarkPointWeb.NoteLive.Show do
   defp apply_action(socket, :edit, _params) do
     socket
     |> assign(:page_title, "Edit Note")
+  end
+
+  # Handle PubSub broadcasts
+  @impl true
+  def handle_info({:note_updated, note}, socket) do
+    # Only update if this is the note we're currently viewing
+    if socket.assigns.note && socket.assigns.note.id == note.id do
+      {:noreply, assign(socket, note: note)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:note_deleted, note}, socket) do
+    # If the note we're viewing was deleted, redirect to the notes list
+    if socket.assigns.note && socket.assigns.note.id == note.id do
+      {:noreply,
+       socket
+       |> put_flash(:info, "This note has been deleted")
+       |> push_navigate(to: ~p"/notes")}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  # Ignore other broadcast events
+  @impl true
+  def handle_info(_message, socket) do
+    {:noreply, socket}
   end
 
   @impl true

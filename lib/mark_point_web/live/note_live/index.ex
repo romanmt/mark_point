@@ -8,6 +8,12 @@ defmodule MarkPointWeb.NoteLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     notes = Notes.list_notes()
+
+    # Subscribe to the notes topic for real-time updates
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(MarkPoint.PubSub, "notes")
+    end
+
     {:ok, assign(socket, notes: notes, show_delete_confirmation: false, note_to_delete: nil)}
   end
 
@@ -39,6 +45,38 @@ defmodule MarkPointWeb.NoteLive.Index do
         |> put_flash(:error, "Note not found")
         |> push_navigate(to: ~p"/notes")
     end
+  end
+
+  # Handle PubSub broadcasts
+  @impl true
+  def handle_info({:note_created, _note}, socket) do
+    notes = Notes.list_notes()
+    {:noreply, assign(socket, notes: notes)}
+  end
+
+  @impl true
+  def handle_info({:note_updated, note}, socket) do
+    # If this is the note currently being edited, update it in the assigns
+    socket = if socket.assigns.note && socket.assigns.note.id == note.id do
+      assign(socket, note: note)
+    else
+      socket
+    end
+
+    notes = Notes.list_notes()
+    {:noreply, assign(socket, notes: notes)}
+  end
+
+  @impl true
+  def handle_info({:note_deleted, _note}, socket) do
+    notes = Notes.list_notes()
+    {:noreply, assign(socket, notes: notes)}
+  end
+
+  @impl true
+  def handle_info({:note_order_updated, _note}, socket) do
+    notes = Notes.list_notes()
+    {:noreply, assign(socket, notes: notes)}
   end
 
   @impl true
